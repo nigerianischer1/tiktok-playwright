@@ -31,4 +31,5 @@ jobs:
     - run: npm run build --if-present
     - name: Run Playwright tests
       uses: microsoft/playwright-github-action@v1.4.4
-    - run: npm test
+    - run: npm test -- --coverage
+    - uses: codecov/codecov-action@v1

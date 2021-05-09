@@ -1,4 +1,4 @@
-# tiktok-playwright [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/arc298/tiktok-playwright/build-test)](https://github.com/arc298/tiktok-playwright/actions)  [![npm](https://img.shields.io/npm/v/tiktok-playwright)](https://www.npmjs.com/package/tiktok-playwright) [![npm](https://img.shields.io/npm/dt/tiktok-playwright)](https://www.npmjs.com/package/tiktok-playwright)
+# tiktok-playwright [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/arc298/tiktok-playwright/build-test)](https://github.com/arc298/tiktok-playwright/actions)  [![Codecov](https://img.shields.io/codecov/c/github/arc298/tiktok-playwright)](https://app.codecov.io/gh/arc298/tiktok-playwright) [![npm](https://img.shields.io/npm/v/tiktok-playwright?color=blue)](https://www.npmjs.com/package/tiktok-playwright)
 
 > An application for downloading a TikTok user's videos. Use responsibly.
 
@@ -62,7 +62,7 @@ Otherwise, a rejected promise is returned.
 
 ##### Latest
 
-##### `0.0.1`
+##### `0.0.2`
 
 - Initial version
 
