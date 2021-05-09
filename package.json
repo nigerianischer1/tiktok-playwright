@@ -1,0 +1,44 @@
+{
+  "name": "tiktok-playwright",
+  "version": "0.0.1",
+  "description": "An application for downloading a tiktok user's videos.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "tiktok",
+    "playwright",
+    "scraper"
+  ],
+  "author": "arc298",
+  "license": "MIT",
+  "dependencies": {
+    "meow": "^9.0.0",
+    "ora": "^5.4.0",
+    "playwright": "^1.10.0",
+    "tiktok-captcha-solver": "^0.0.1"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
+  },
+  "files": [
+    "index.js",
+    "src"
+  ],
+  "bin": {
+    "tiktok-playwright": "index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arc298/tiktok-playwright.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arc298/tiktok-playwright/issues"
+  },
+  "homepage": "https://github.com/arc298/tiktok-playwright#readme",
+  "engines": {
+    "node": ">=12 <=16"
+  }
+}
