@@ -6,9 +6,11 @@ const cli = meow(`
 	  $ tiktok-playwright <user>
 
 	Options
-	  --downloadDir, -d  Download destination
-	  --redownload,  -r  Re-downloads existing files
-	  --quiet,       -q  Disables message output
+    --version            Show version number             
+    --downloadDir, -d    Download destination            [default: "./<user>"]
+    --redownload,  -r    Re-downloads existing files     [default: false]
+    --quiet,       -q    Disables message output         [default: false]
+    --help               Show help                       
 
 	Examples
 	  $ tiktok-playwright user -d /path/to/download

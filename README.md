@@ -24,11 +24,11 @@ $ tiktok-playwright --help
 Usage: tiktok-playwright <user> [options]
 
 Options:
-  --version            Show version number                 [boolean]
-  --downloadDir, -d    Download destination                [default: "./<user>"]
-  --redownload,  -r    Re-downloads existing files         [default: false]
-  --quiet,       -q    Disables message output             [default: false]
-  --help               Show help                           [boolean]
+  --version            Show version number             
+  --downloadDir, -d    Download destination            [default: "./<user>"]
+  --redownload,  -r    Re-downloads existing files     [default: false]
+  --quiet,       -q    Disables message output         [default: false]
+  --help               Show help                       
 
 Examples:
   tiktok-playwright user
