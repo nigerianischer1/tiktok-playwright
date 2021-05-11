@@ -511,12 +511,12 @@ describe('TikTokPlaywright', () => {
   })
 
   describe('_tearDown', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       tiktok.page = {close: jest.fn()}
       tiktok.context = {close: jest.fn()}
       tiktok.browser = {close: jest.fn()}
 
-      tiktok._tearDown()
+      await tiktok._tearDown()
     })
 
     it('closes the page', () => {

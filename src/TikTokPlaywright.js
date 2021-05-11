@@ -139,23 +139,23 @@ class TikTokPlaywright {
   _waitForDownloads() {
     Promise
       .allSettled(Object.values(this.pendingDownloads))
-      .then(() => {
+      .then(async () => {
         this.spinner.succeed(`Downloaded ${this.downloadsCompleted} videos for ${this.user}`)
-        this._tearDown()
+        await this._tearDown()
       })
   }
 
   async _onError(e) {
     this.spinner.fail(e.message)
 
-    this._tearDown()
+    await this._tearDown()
     return Promise.reject(e)
   }
 
-  _tearDown() {
-    this.page.close()
-    this.context.close()
-    this.browser.close()
+  async _tearDown() {
+    await this.page.close()
+    await this.context.close()
+    await this.browser.close()
   }
 }
 

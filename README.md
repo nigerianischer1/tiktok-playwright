@@ -2,6 +2,8 @@
 
 > An application for downloading a TikTok user's videos. Use responsibly.
 
+![](docs/images/tiktok-playwright.gif)
+
 ## Install
 
 ```bash
@@ -62,7 +64,7 @@ Otherwise, a rejected promise is returned.
 
 ##### Latest
 
-##### `0.0.2`
+##### `0.0.3`
 
 - Initial version
 
