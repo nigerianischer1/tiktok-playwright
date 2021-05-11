@@ -132,7 +132,7 @@ class TikTokPlaywright {
     this.downloadsCompleted++
 
     if (this.videoFeedItems.length) {
-      this.spinner.text = `Downloading videos ${this.downloadsCompleted}/${this.videoFeedItems.length}`
+      this.spinner.text = `Downloading videos ${this.downloadsCompleted}/${this.videoFeedItems.length - Object.keys(this.filesInDownloadDir).length}`
     }
   }
 
@@ -140,7 +140,7 @@ class TikTokPlaywright {
     Promise
       .allSettled(Object.values(this.pendingDownloads))
       .then(async () => {
-        this.spinner.succeed(`Downloaded ${this.downloadsCompleted} videos for ${this.user}`)
+        this.spinner.succeed(`Downloaded ${this.downloadsCompleted} video${this.downloadsCompleted > 1 ? 's' : ''} for ${this.user}`)
         await this._tearDown()
       })
   }

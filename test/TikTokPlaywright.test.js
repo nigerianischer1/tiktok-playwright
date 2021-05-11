@@ -473,17 +473,41 @@ describe('TikTokPlaywright', () => {
 
   describe('_waitForDownloads', () => {
     describe('when all pending downloads have settled', () => {
+
       beforeEach(() => {
         jest.spyOn(tiktok, '_tearDown').mockImplementation()
-        tiktok._waitForDownloads()
       })
 
-      it('calls succeed on the spinner', () => {
-        expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('Downloaded'))
+      describe('and there is only one download completed', () => {
+        beforeEach(() => {
+          tiktok.downloadsCompleted = 1
+          tiktok._waitForDownloads()
+        })
+
+        it('calls succeed on the spinner', () => {
+          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('Downloaded'))
+          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('video'))
+        })
+
+        it('invokes tearDown', () => {
+          expect(tiktok._tearDown).toBeCalled()
+        })
       })
 
-      it('invokes tearDown', () => {
-        expect(tiktok._tearDown).toBeCalled()
+      describe('and there is more than one download completed', () => {
+        beforeEach(() => {
+          tiktok.downloadsCompleted = 2
+          tiktok._waitForDownloads()
+        })
+
+        it('calls succeed on the spinner', () => {
+          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('Downloaded'))
+          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('videos'))
+        })
+
+        it('invokes tearDown', () => {
+          expect(tiktok._tearDown).toBeCalled()
+        })
       })
     })
   })
