@@ -19,7 +19,7 @@
     "meow": "^9.0.0",
     "ora": "^5.4.0",
     "playwright": "^1.10.0",
-    "tiktok-captcha-solver": "^0.0.1"
+    "tiktok-captcha-solver": "^0.0.7"
   },
   "devDependencies": {
     "husky": "^6.0.0",

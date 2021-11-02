@@ -1,6 +1,6 @@
-const {existsSync, mkdirSync} = require('fs')
+const { existsSync, mkdirSync } = require('fs')
 
-const {chromium} = require('playwright')
+const { firefox } = require('playwright')
 const ora = require('ora')
 
 const getUser = require('./helpers/getUser')
@@ -9,7 +9,6 @@ const scrollToBottom = require('./helpers/scrollToBottom')
 const extractVideoUrlAndFilename = require('./helpers/extractVideoUrlAndFilename')
 const downloadVideo = require('./helpers/downloadVideo')
 const CaptchaSolver = require('tiktok-captcha-solver')
-
 
 class TikTokPlaywright {
   user
@@ -30,14 +29,14 @@ class TikTokPlaywright {
   get defaults() {
     return {
       quiet: true,
-      redownload: false
+      redownload: false,
     }
   }
 
   async download(user, options) {
-    const {downloadDir, redownload, quiet} = Object.assign(
+    const { downloadDir, redownload, quiet } = Object.assign(
       this.defaults,
-      {downloadDir: `./${getUser(user)}`},
+      { downloadDir: `./${getUser(user)}` },
       options
     )
 
@@ -45,7 +44,7 @@ class TikTokPlaywright {
     this.downloadDir = downloadDir
     this.redownload = redownload
 
-    this.spinner = ora({isSilent: quiet}).start('Initializing')
+    this.spinner = ora({ isSilent: quiet }).start('Initializing')
 
     return await this._initialize()
       .then(async () => await this._navigateTo(this.user))
@@ -56,11 +55,12 @@ class TikTokPlaywright {
   }
 
   async _initialize() {
-    this.browser = await chromium.launch({
+    this.browser = await firefox.launch({
       headless: true,
-      devtools: false
+      devtools: false,
     })
-    this.context = await this.browser.newContext()
+
+    this.context = await this.browser.newContext({ ignoreHTTPSErrors: true })
     this.page = await this.context.newPage()
 
     TikTokPlaywright.createDownloadDir(this.downloadDir)
@@ -73,6 +73,7 @@ class TikTokPlaywright {
 
     this.spinner.text = `Navigating to ${user}`
 
+    await this.page.goto(`https://www.tiktok.com/login`)
     await this.page.goto(`https://www.tiktok.com/@${user}`)
     await this.page.waitForLoadState('networkidle')
 
@@ -82,7 +83,7 @@ class TikTokPlaywright {
 
   async _scrollToBottom() {
     this.spinner.text = 'Scrolling through videos'
-    return await scrollToBottom(this.page)
+    return await scrollToBottom(this.page, 50, 2000)
   }
 
   async _hoverVideoFeedItems() {
@@ -97,7 +98,7 @@ class TikTokPlaywright {
 
   static createDownloadDir(dir) {
     if (!existsSync(dir)) {
-      mkdirSync(dir, {recursive: true})
+      mkdirSync(dir, { recursive: true })
     }
   }
 
@@ -106,13 +107,21 @@ class TikTokPlaywright {
       const contentType = (response.headers() || {})['content-type']
 
       if (contentType && contentType.includes('video/')) {
-        const {videoUrl, filename} = extractVideoUrlAndFilename(response.url(), contentType)
+        const { videoUrl, filename } = extractVideoUrlAndFilename(
+          response.url(),
+          contentType
+        )
         const cookies = await context.cookies()
-        const cookieString = cookies.map(({name, value}) => `${name}=${value}`).join('; ')
+        const cookieString = cookies
+          .map(({ name, value }) => `${name}=${value}`)
+          .join('; ')
 
         if (this._shouldDownload(filename, videoUrl)) {
-          this.pendingDownloads[videoUrl] = downloadVideo(videoUrl, `${this.downloadDir}/${filename}`, cookieString)
-            .then(() => this._onDownloadComplete())
+          this.pendingDownloads[videoUrl] = downloadVideo(
+            videoUrl,
+            `${this.downloadDir}/${filename}`,
+            cookieString
+          ).then(() => this._onDownloadComplete())
         }
       }
     }
@@ -132,17 +141,19 @@ class TikTokPlaywright {
     this.downloadsCompleted++
 
     if (this.videoFeedItems.length) {
-      this.spinner.text = `Downloading videos ${this.downloadsCompleted}/${this.videoFeedItems.length - Object.keys(this.filesInDownloadDir).length}`
+      this.spinner.text = `Downloading videos [${this.downloadsCompleted} completed]`
     }
   }
 
   _waitForDownloads() {
-    Promise
-      .allSettled(Object.values(this.pendingDownloads))
-      .then(async () => {
-        this.spinner.succeed(`Downloaded ${this.downloadsCompleted} video${this.downloadsCompleted > 1 ? 's' : ''} for ${this.user}`)
-        await this._tearDown()
-      })
+    Promise.allSettled(Object.values(this.pendingDownloads)).then(async () => {
+      this.spinner.succeed(
+        `Downloaded ${this.downloadsCompleted} video${
+          this.downloadsCompleted > 1 ? 's' : ''
+        } for ${this.user}`
+      )
+      await this._tearDown()
+    })
   }
 
   async _onError(e) {

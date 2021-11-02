@@ -1,4 +1,4 @@
-const {chromium} = require('playwright')
+const { firefox } = require('playwright')
 const fs = require('fs')
 const CaptchaSolver = require('tiktok-captcha-solver')
 const ora = require('ora')
@@ -11,13 +11,13 @@ const downloadVideo = require('../src/helpers/downloadVideo')
 
 jest.mock('playwright', () => {
   return {
-    chromium: {
+    firefox: {
       launch: jest.fn(() => ({
         newContext: jest.fn(() => ({
-          newPage: jest.fn()
-        }))
-      }))
-    }
+          newPage: jest.fn(),
+        })),
+      })),
+    },
   }
 })
 
@@ -37,40 +37,42 @@ describe('TikTokPlaywright', () => {
     tiktok.spinner = {
       text: '',
       fail: jest.fn(),
-      succeed: jest.fn()
+      succeed: jest.fn(),
     }
   })
 
   describe('_initialize', () => {
     beforeEach(async () => {
       jest.spyOn(TikTokPlaywright, 'createDownloadDir')
-      getFilesIn.mockReturnValue({'file': true})
+      getFilesIn.mockReturnValue({ file: true })
 
       await tiktok._initialize()
     })
 
-    it('launches chrome', () => {
-      expect(chromium.launch).toBeCalled()
+    it('launches firefox', () => {
+      expect(firefox.launch).toBeCalled()
     })
 
     it('creates a new context', () => {
-      const browser = chromium.launch.mock.results[0].value
+      const browser = firefox.launch.mock.results[0].value
       expect(browser.newContext).toBeCalled()
     })
 
     it('creates a new page from the context', () => {
-      const browser = chromium.launch.mock.results[0].value
+      const browser = firefox.launch.mock.results[0].value
       const context = browser.newContext.mock.results[0].value
       expect(context.newPage).toBeCalled()
     })
 
     it('creates the download dir', () => {
-      expect(TikTokPlaywright.createDownloadDir).toBeCalledWith(tiktok.downloadDir)
+      expect(TikTokPlaywright.createDownloadDir).toBeCalledWith(
+        tiktok.downloadDir
+      )
     })
 
     it('gets the files in the download dir', () => {
       expect(getFilesIn).toBeCalledWith(tiktok.downloadDir)
-      expect(tiktok.filesInDownloadDir).toEqual({'file': true})
+      expect(tiktok.filesInDownloadDir).toEqual({ file: true })
     })
   })
 
@@ -82,7 +84,7 @@ describe('TikTokPlaywright', () => {
         on: jest.fn(),
         goto: jest.fn(),
         waitForFunction: jest.fn((cb) => cb()),
-        waitForLoadState: jest.fn()
+        waitForLoadState: jest.fn(),
       }
 
       await tiktok._navigateTo('user')
@@ -93,7 +95,10 @@ describe('TikTokPlaywright', () => {
     })
 
     it('adds a response listener', () => {
-      expect(tiktok.page.on).toBeCalledWith('response', tiktok._responseHandler.mock.results[0].value)
+      expect(tiktok.page.on).toBeCalledWith(
+        'response',
+        tiktok._responseHandler.mock.results[0].value
+      )
     })
 
     it('go to the user page', () => {
@@ -132,7 +137,7 @@ describe('TikTokPlaywright', () => {
       })
 
       it('makes the dir', () => {
-        expect(fs.mkdirSync).toBeCalledWith('./test', {recursive: true})
+        expect(fs.mkdirSync).toBeCalledWith('./test', { recursive: true })
       })
     })
   })
@@ -150,9 +155,7 @@ describe('TikTokPlaywright', () => {
   describe('_hoverVideoFeedItems', () => {
     beforeEach(async () => {
       tiktok.page = {
-        $$: jest.fn(() => ([
-          {hover: jest.fn()}
-        ]))
+        $$: jest.fn(() => [{ hover: jest.fn() }]),
       }
 
       tiktok.context = 'context'
@@ -171,7 +174,6 @@ describe('TikTokPlaywright', () => {
   })
 
   describe('_shouldDownload', () => {
-
     describe('when redownload is true', () => {
       beforeEach(() => {
         tiktok.redownload = true
@@ -180,19 +182,21 @@ describe('TikTokPlaywright', () => {
       describe('and the file is in the download dir', () => {
         beforeEach(() => {
           tiktok.filesInDownloadDir = {
-            filename: true
+            filename: true,
           }
         })
 
         describe('and is already in pending downloads', () => {
           beforeEach(() => {
             tiktok.pendingDownloads = {
-              videoUrl: 'downloadVideo'
+              videoUrl: 'downloadVideo',
             }
           })
 
           it('returns false', () => {
-            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(false)
+            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+              false
+            )
           })
         })
 
@@ -203,7 +207,9 @@ describe('TikTokPlaywright', () => {
             })
 
             it('returns true', () => {
-              expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(true)
+              expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+                true
+              )
             })
           })
         })
@@ -217,12 +223,14 @@ describe('TikTokPlaywright', () => {
         describe('and is already in pending downloads', () => {
           beforeEach(() => {
             tiktok.pendingDownloads = {
-              videoUrl: 'downloadVideo'
+              videoUrl: 'downloadVideo',
             }
           })
 
           it('returns false', () => {
-            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(false)
+            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+              false
+            )
           })
         })
 
@@ -246,19 +254,21 @@ describe('TikTokPlaywright', () => {
       describe('and the file is in the download dir', () => {
         beforeEach(() => {
           tiktok.filesInDownloadDir = {
-            filename: true
+            filename: true,
           }
         })
 
         describe('and is already in pending downloads', () => {
           beforeEach(() => {
             tiktok.pendingDownloads = {
-              videoUrl: 'downloadVideo'
+              videoUrl: 'downloadVideo',
             }
           })
 
           it('returns false', () => {
-            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(false)
+            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+              false
+            )
           })
         })
 
@@ -269,7 +279,9 @@ describe('TikTokPlaywright', () => {
             })
 
             it('returns true', () => {
-              expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(true)
+              expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+                true
+              )
             })
           })
         })
@@ -283,12 +295,14 @@ describe('TikTokPlaywright', () => {
         describe('and is already in pending downloads', () => {
           beforeEach(() => {
             tiktok.pendingDownloads = {
-              videoUrl: 'downloadVideo'
+              videoUrl: 'downloadVideo',
             }
           })
 
           it('returns false', () => {
-            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(false)
+            expect(tiktok._shouldDownload('filename', 'videoUrl')).toEqual(
+              false
+            )
           })
         })
 
@@ -303,7 +317,6 @@ describe('TikTokPlaywright', () => {
         })
       })
     })
-
   })
 
   describe('_responseHandler', () => {
@@ -314,24 +327,26 @@ describe('TikTokPlaywright', () => {
 
       extractVideoUrlAndFilename.mockReturnValue({
         videoUrl: 'videoUrl',
-        filename: 'filename.mp4'
+        filename: 'filename.mp4',
       })
 
       downloadVideo.mockClear()
-      downloadVideo.mockReturnValue({then: (cb) => {
+      downloadVideo.mockReturnValue({
+        then: (cb) => {
           invokeDownloadComplete = cb
           return 'downloadVideo'
-      }})
+        },
+      })
 
       context = {
-        cookies: () => ([
-          {name: 'cookieName1', value: 'cookieValue1'},
-          {name: 'cookieName2', value: 'cookieValue2'}
-        ])
+        cookies: () => [
+          { name: 'cookieName1', value: 'cookieValue1' },
+          { name: 'cookieName2', value: 'cookieValue2' },
+        ],
       }
 
       response = {
-        url: () => {}
+        url: () => {},
       }
 
       tiktok.downloadDir = './user'
@@ -340,7 +355,7 @@ describe('TikTokPlaywright', () => {
     describe('when the content-type includes video', () => {
       beforeEach(() => {
         response.headers = () => ({
-          'content-type': 'video/mp4'
+          'content-type': 'video/mp4',
         })
       })
 
@@ -355,7 +370,11 @@ describe('TikTokPlaywright', () => {
           })
 
           it('downloads the video', () => {
-            expect(downloadVideo).toBeCalledWith('videoUrl', './user/filename.mp4', 'cookieName1=cookieValue1; cookieName2=cookieValue2')
+            expect(downloadVideo).toBeCalledWith(
+              'videoUrl',
+              './user/filename.mp4',
+              'cookieName1=cookieValue1; cookieName2=cookieValue2'
+            )
           })
 
           it('adds the download to pendingDownloads', () => {
@@ -388,7 +407,7 @@ describe('TikTokPlaywright', () => {
 
       describe('and the file is in the downloads dir', () => {
         beforeEach(() => {
-          tiktok.filesInDownloadDir = {'filename.mp4': true}
+          tiktok.filesInDownloadDir = { 'filename.mp4': true }
         })
 
         describe('and is NOT already in pending downloads', () => {
@@ -414,9 +433,6 @@ describe('TikTokPlaywright', () => {
           })
         })
       })
-
-
-
     })
 
     describe('when the content-type does NOT include video', () => {
@@ -466,14 +482,15 @@ describe('TikTokPlaywright', () => {
       })
 
       it('changes the spinner text', () => {
-        expect(tiktok.spinner.text).toContain('1/1')
+        expect(tiktok.spinner.text).toContain(
+          'Downloading videos [1 completed]'
+        )
       })
     })
   })
 
   describe('_waitForDownloads', () => {
     describe('when all pending downloads have settled', () => {
-
       beforeEach(() => {
         jest.spyOn(tiktok, '_tearDown').mockImplementation()
       })
@@ -485,8 +502,12 @@ describe('TikTokPlaywright', () => {
         })
 
         it('calls succeed on the spinner', () => {
-          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('Downloaded'))
-          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('video'))
+          expect(tiktok.spinner.succeed).toBeCalledWith(
+            expect.stringContaining('Downloaded')
+          )
+          expect(tiktok.spinner.succeed).toBeCalledWith(
+            expect.stringContaining('video')
+          )
         })
 
         it('invokes tearDown', () => {
@@ -501,8 +522,12 @@ describe('TikTokPlaywright', () => {
         })
 
         it('calls succeed on the spinner', () => {
-          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('Downloaded'))
-          expect(tiktok.spinner.succeed).toBeCalledWith(expect.stringContaining('videos'))
+          expect(tiktok.spinner.succeed).toBeCalledWith(
+            expect.stringContaining('Downloaded')
+          )
+          expect(tiktok.spinner.succeed).toBeCalledWith(
+            expect.stringContaining('videos')
+          )
         })
 
         it('invokes tearDown', () => {
@@ -531,14 +556,13 @@ describe('TikTokPlaywright', () => {
       expect(Promise.reject).toBeCalledWith(error)
       expect(result).toEqual(error)
     })
-
   })
 
   describe('_tearDown', () => {
     beforeEach(async () => {
-      tiktok.page = {close: jest.fn()}
-      tiktok.context = {close: jest.fn()}
-      tiktok.browser = {close: jest.fn()}
+      tiktok.page = { close: jest.fn() }
+      tiktok.context = { close: jest.fn() }
+      tiktok.browser = { close: jest.fn() }
 
       await tiktok._tearDown()
     })
@@ -558,7 +582,7 @@ describe('TikTokPlaywright', () => {
 
   describe('download', () => {
     beforeEach(() => {
-      ora.mockReturnValue({start: jest.fn()})
+      ora.mockReturnValue({ start: jest.fn() })
     })
 
     describe('when all download actions succeed', () => {
@@ -573,7 +597,7 @@ describe('TikTokPlaywright', () => {
       })
 
       it('initializes ora with the quiet option and starts the spinner', () => {
-        expect(ora).toBeCalledWith({isSilent: true})
+        expect(ora).toBeCalledWith({ isSilent: true })
         expect(ora.mock.results[0].value.start).toBeCalled()
       })
 
