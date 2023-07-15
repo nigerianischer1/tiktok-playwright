@@ -1,6 +1,6 @@
 {
   "name": "tiktok-playwright",
-  "version": "0.0.6",
+  "version": "0.0.6.1",
   "description": "An application for downloading a tiktok user's videos.",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   "dependencies": {
     "meow": "^9.0.0",
     "ora": "^5.4.0",
-    "playwright": "^1.10.0",
+    "playwright": "^1.36.0",
     "tiktok-captcha-solver": "^0.0.7"
   },
   "devDependencies": {

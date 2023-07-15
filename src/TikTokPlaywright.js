@@ -60,10 +60,10 @@ class TikTokPlaywright {
       devtools: false,
     })
 
-    this.context = await this.browser.newContext({ 
+    this.context = await this.browser.newContext({
       ignoreHTTPSErrors: true,
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37'
-     })
+    })
     this.page = await this.context.newPage()
 
     TikTokPlaywright.createDownloadDir(this.downloadDir)
@@ -85,7 +85,7 @@ class TikTokPlaywright {
   }
 
   async _scrollToBottom() {
-    await this.page.click('button:has-text("Accept all")');
+    await this.page.click('button:has-text("Accept all")')
     this.spinner.text = 'Scrolling through videos'
     return await scrollToBottom(this.page, 500, 200)
   }
@@ -96,7 +96,12 @@ class TikTokPlaywright {
     this.videoFeedItems = await this.page.$$('[data-e2e="user-post-item"]')
 
     for (const item of this.videoFeedItems) {
-      await item.hover()
+      try {
+        await item.hover()
+        await page.waitForTimeout(20)
+      } catch (error) {
+        await this.catchaSolver.solve()
+      }
     }
   }
 
@@ -152,8 +157,7 @@ class TikTokPlaywright {
   _waitForDownloads() {
     Promise.allSettled(Object.values(this.pendingDownloads)).then(async () => {
       this.spinner.succeed(
-        `Downloaded ${this.downloadsCompleted} video${
-          this.downloadsCompleted > 1 ? 's' : ''
+        `Downloaded ${this.downloadsCompleted} video${this.downloadsCompleted > 1 ? 's' : ''
         } for ${this.user}`
       )
       await this._tearDown()
