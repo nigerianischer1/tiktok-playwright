@@ -20,6 +20,7 @@ class TikTokPlaywright {
   page
 
   filesInDownloadDir = {}
+  videoFeedUrls = []
   videoFeedItems = []
   pendingDownloads = {}
   downloadsCompleted = 0
@@ -49,7 +50,7 @@ class TikTokPlaywright {
     return await this._initialize()
       .then(async () => await this._navigateTo(this.user))
       .then(async () => await this._scrollToBottom())
-      .then(async () => await this._hoverVideoFeedItems())
+      .then(async () => await this._getVideoFeedItems())
       .then(async () => await this._waitForDownloads())
       .catch(async (e) => await this._onError(e))
   }
@@ -72,7 +73,7 @@ class TikTokPlaywright {
 
   async _navigateTo(user) {
     this.catchaSolver = new CaptchaSolver(this.page)
-    this.page.on('response', this._responseHandler(this.context))
+
 
     this.spinner.text = `Navigating to ${user}`
 
@@ -87,22 +88,82 @@ class TikTokPlaywright {
   async _scrollToBottom() {
     await this.page.click('button:has-text("Accept all")')
     this.spinner.text = 'Scrolling through videos'
-    return await scrollToBottom(this.page, 500, 200)
+    await scrollToBottom(this.page, this.catchaSolver, 2000, 1000)
+    this.spinner.text = `Solving captcha`
+    await this.catchaSolver.solve()
+    await this.page.waitForTimeout(3000)
+    this.spinner.text = 'Scrolling through videos again'
+    await scrollToBottom(this.page, this.catchaSolver, 2000, 1000)
   }
 
-  async _hoverVideoFeedItems() {
+  async _getVideoFeedItems() {
     this.spinner.text = 'Downloading videos'
+    this.videoFeedUrls = await this.page.$$('[data-e2e="user-post-item-desc"] a');
 
-    this.videoFeedItems = await this.page.$$('[data-e2e="user-post-item"]')
+    await Promise.all(this.videoFeedUrls.map(async (item) => {
+      let href = await item.getProperty('href');
+      let url = await href.jsonValue();
+        try {
+          if(url.includes("/video/")){
+            await this._getVideoNoWM(url)
+          }
+        } catch (error) {
+          await this.catchaSolver.solve()
+        }
+    }));
+  }
 
-    for (const item of this.videoFeedItems) {
-      try {
-        await item.hover()
-        await page.waitForTimeout(20)
-      } catch (error) {
-        await this.catchaSolver.solve()
+  async _getVideoNoWM(url) {
+    const idMedia = await this._getIdMedia(url)
+    const API_URL = `https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${idMedia}`;
+
+    const request = await fetch(API_URL, {
+        method: "GET",
+        headers: {
+          'User-Agent': 'TikTok 26.2.0 rv:262018 (iPhone; iOS 14.4.2; en_US) Cronet'
       }
+    });
+
+    const body = await request.text();
+    try {
+        var res = JSON.parse(body);
+    } catch (err) {
+        console.error("Error:", err);
+        console.error("Response body:", body);
     }
+    
+    if(res.aweme_list[0].image_post_info){
+      let items = []
+      for(const index in res.aweme_list[0].image_post_info.images){
+        const urlMedia = res.aweme_list[0].image_post_info.images[index].display_image.url_list[1]
+        const idMediaIterator = `${idMedia} - ${index}`
+        const data = {
+          url: urlMedia,
+          id: idMediaIterator,
+          type: 'jpeg'
+        }
+        items.push(data);
+      }
+      return await this._downloadImages(items)
+    }else{
+      const urlMedia = res.aweme_list[0].video.play_addr.url_list[0]
+      const data = {
+        url: urlMedia,
+        id: idMedia,
+        type: 'mp4'
+      }
+      return await this._downloadVideo(data)
+    }
+    
+  }
+
+  async _getIdMedia(url) {
+    const matching = url.includes("/video/")
+    if (!matching) {
+        exit();
+    }
+    const idVideo = url.substring(url.indexOf("/video/") + 7, url.length);
+    return (idVideo.length > 19) ? idVideo.substring(0, idVideo.indexOf("?")) : idVideo;
   }
 
   static createDownloadDir(dir) {
@@ -111,34 +172,34 @@ class TikTokPlaywright {
     }
   }
 
-  _responseHandler(context) {
-    return async (response) => {
-      const contentType = (response.headers() || {})['content-type']
-
-      if (contentType && contentType.includes('video/')) {
-        const { videoUrl, filename } = extractVideoUrlAndFilename(
-          response.url(),
-          contentType
-        )
-        const cookies = await context.cookies()
-        const cookieString = cookies
-          .map(({ name, value }) => `${name}=${value}`)
-          .join('; ')
-
-        if (this._shouldDownload(filename, videoUrl)) {
-          this.pendingDownloads[videoUrl] = downloadVideo(
-            videoUrl,
-            `${this.downloadDir}/${filename}`,
-            cookieString
-          ).then(() => this._onDownloadComplete())
-        }
-      }
-    }
+  async _downloadVideo(item) {
+    Promise.allSettled(Object.values(item)).then(() => {
+      if (this._shouldDownload(item.url, item.id, 'mp4')) {
+        this.pendingDownloads[item.url] = downloadVideo(
+          item.url,
+          `${this.downloadDir}/${item.id}.mp4`
+        ).then(() => this._onDownloadComplete())
+      };
+    })
   }
 
-  _shouldDownload(filename, videoUrl) {
-    const inDownloadsDir = filename in this.filesInDownloadDir
-    const inPendingDownloads = videoUrl in this.pendingDownloads
+  async _downloadImages(items) {
+    Promise.allSettled(Object.values(items)).then(() => {
+    for (const index in items){
+      const item = items[index]
+      if (this._shouldDownload(item.url, item.id, 'jpeg')) {
+        this.pendingDownloads[item.url] = downloadVideo(
+          item.url,
+          `${this.downloadDir}/${item.id}.jpeg`
+        ).then(() => this._onDownloadComplete())
+      };
+    }
+  })
+  }
+
+  _shouldDownload(url, id, type) {
+    const inDownloadsDir = `${id}.${type}`  in this.filesInDownloadDir
+    const inPendingDownloads = url in this.pendingDownloads
 
     return (
       (this.redownload && !inPendingDownloads) ||

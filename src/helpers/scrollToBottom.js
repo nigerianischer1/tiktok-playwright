@@ -1,4 +1,4 @@
-const scrollToBottom = async (page, distance = 100, delay = 400) => {
+const scrollToBottom = async (page, catchaSolver, distance = 1000, delay = 200) => {
   while (await page.evaluate(() => document.scrollingElement.scrollTop + window.innerHeight < document.scrollingElement.scrollHeight)) {
     await page.evaluate((y) => {
       document.scrollingElement.scrollBy(0, y)

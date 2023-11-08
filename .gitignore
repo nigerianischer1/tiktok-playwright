@@ -2,4 +2,6 @@ node_modules
 coverage
 .idea
 .vscode
+.husky
+build
 tmp
