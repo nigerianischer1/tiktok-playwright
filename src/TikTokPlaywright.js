@@ -61,7 +61,7 @@ class TikTokPlaywright {
 
   async _initialize() {
     this.browser = await firefox.launch({
-      headless: false,
+      headless: true,
       devtools: false,
     })
 
