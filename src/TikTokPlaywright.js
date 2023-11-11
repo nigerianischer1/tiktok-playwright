@@ -9,6 +9,8 @@ const scrollToBottom = require('./helpers/scrollToBottom')
 const extractVideoUrlAndFilename = require('./helpers/extractVideoUrlAndFilename')
 const downloadVideo = require('./helpers/downloadVideo')
 const CaptchaSolver = require('tiktok-captcha-solver')
+const pLimit = require('p-limit')
+
 
 class TikTokPlaywright {
   user
@@ -26,6 +28,8 @@ class TikTokPlaywright {
   downloadsCompleted = 0
 
   spinner
+  scroller
+  observer
 
   get defaults() {
     return {
@@ -57,7 +61,7 @@ class TikTokPlaywright {
 
   async _initialize() {
     this.browser = await firefox.launch({
-      headless: true,
+      headless: false,
       devtools: false,
     })
 
@@ -73,7 +77,7 @@ class TikTokPlaywright {
 
   async _navigateTo(user) {
     this.catchaSolver = new CaptchaSolver(this.page)
-
+    const limit = pLimit(10)
 
     this.spinner.text = `Navigating to ${user}`
 
@@ -89,29 +93,28 @@ class TikTokPlaywright {
     await this.page.click('button:has-text("Accept all")')
     this.spinner.text = 'Scrolling through videos'
     await scrollToBottom(this.page, this.catchaSolver, 2000, 1000)
-    this.spinner.text = `Solving captcha`
-    await this.catchaSolver.solve()
-    await this.page.waitForTimeout(3000)
-    this.spinner.text = 'Scrolling through videos again'
-    await scrollToBottom(this.page, this.catchaSolver, 2000, 1000)
   }
 
   async _getVideoFeedItems() {
-    this.spinner.text = 'Downloading videos'
+    this.spinner.text = 'Downloading videos';
     this.videoFeedUrls = await this.page.$$('[data-e2e="user-post-item-desc"] a');
-
-    await Promise.all(this.videoFeedUrls.map(async (item) => {
+  
+    const concurrencyLimit = 10;
+    const limit = pLimit(concurrencyLimit);
+  
+    await Promise.all(this.videoFeedUrls.map((item) => limit(async () => {
       let href = await item.getProperty('href');
       let url = await href.jsonValue();
-        try {
-          if(url.includes("/video/")){
-            await this._getVideoNoWM(url)
-          }
-        } catch (error) {
-          await this.catchaSolver.solve()
+      try {
+        if (url.includes("/video/")) {
+          await this._getVideoNoWM(url);
         }
-    }));
+      } catch (error) {
+        await this.catchaSolver.solve();
+      }
+    })));
   }
+  
 
   async _getVideoNoWM(url) {
     const idMedia = await this._getIdMedia(url)
@@ -209,14 +212,11 @@ class TikTokPlaywright {
 
   _onDownloadComplete() {
     this.downloadsCompleted++
-
-    if (this.videoFeedItems.length) {
-      this.spinner.text = `Downloading videos [${this.downloadsCompleted} completed]`
-    }
+    this.spinner.text = `Downloading videos [${this.downloadsCompleted} completed]`
   }
 
   _waitForDownloads() {
-    Promise.allSettled(Object.values(this.pendingDownloads)).then(async () => {
+    Promise.allSettled([Object.values(this.pendingDownloads), this.scoller]).then(async () => {
       this.spinner.succeed(
         `Downloaded ${this.downloadsCompleted} video${this.downloadsCompleted > 1 ? 's' : ''
         } for ${this.user}`
